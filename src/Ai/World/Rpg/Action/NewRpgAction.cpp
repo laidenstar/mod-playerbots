@@ -25,6 +25,7 @@
 #include "PlayerbotAI.h"
 #include "PlayerbotTextMgr.h"
 #include "QuestDef.h"
+#include "QuestObjectiveSpawns.h"
 #include "Random.h"
 #include "SharedDefines.h"
 #include "Timer.h"
@@ -33,6 +34,11 @@
 #include "G3D/Vector2.h"
 #include <cmath>
 #include <cstdlib>
+
+// How far from a picked POI point to look for a spawn of the objective's targets.
+constexpr float QUEST_POI_SPAWN_SEARCH_RADIUS = 100.0f;
+// A target spawn this far below the highest floor at its spot is treated as underground or indoors.
+constexpr float QUEST_POI_SPAWN_BELOW_SURFACE = 10.0f;
 
 void TellRpgStatusAction::WhisperStatusChange(Player* owner, std::string const& statusName)
 {
@@ -499,6 +505,21 @@ bool NewRpgDoQuestAction::DoIncompleteQuest(NewRpgInfo::DoQuest& data)
 
         // z = MAX_HEIGHT as we do not know accurate z
         float dz = std::max(bot->GetMap()->GetHeight(dx, dy, MAX_HEIGHT), bot->GetMap()->GetWaterLevel(dx, dy));
+
+        // The highest floor is the hill above a cave or the roof of a building. If the nearest target spawns
+        // well below the highest floor at its own spot, head for that spawn so the bot can reach the targets.
+        Position spawn;
+        if (QuestObjectiveSpawns::Instance().FindNearestSpawn(questId, objectiveIdx, bot->GetMapId(), dx, dy,
+                                                              QUEST_POI_SPAWN_SEARCH_RADIUS, spawn) &&
+            (dz == INVALID_HEIGHT || dz == VMAP_INVALID_HEIGHT_VALUE ||
+             bot->GetMap()->GetHeight(spawn.GetPositionX(), spawn.GetPositionY(), MAX_HEIGHT) -
+                     spawn.GetPositionZ() >
+                 QUEST_POI_SPAWN_BELOW_SURFACE))
+        {
+            dx = spawn.GetPositionX();
+            dy = spawn.GetPositionY();
+            dz = spawn.GetPositionZ();
+        }
 
         // double check for GetQuestPOIPosAndObjectiveIdx
         if (dz == INVALID_HEIGHT || dz == VMAP_INVALID_HEIGHT_VALUE)

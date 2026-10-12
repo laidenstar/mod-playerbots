@@ -23,6 +23,7 @@
 #include "PlayerbotCommandScript.h"
 #include "PlayerbotGuildMgr.h"
 #include "PlayerbotSpellRepository.h"
+#include "QuestObjectiveSpawns.h"
 #include "PlayerbotWorldThreadProcessor.h"
 #include "RandomPlayerbotMgr.h"
 #include "ScriptMgr.h"
@@ -529,6 +530,7 @@ public:
         LOG_INFO("server.loading", " ");
 
         PlayerbotSpellRepository::Instance().Initialize();
+        QuestObjectiveSpawns::Instance().Initialize();
         CheckMountStateAction::LoadPreferredMounts();
 
         LOG_INFO("server.loading", "Playerbots World Thread Processor initialized");
