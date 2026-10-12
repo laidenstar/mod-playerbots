@@ -68,21 +68,50 @@ Player* RandomPlayerbotFactory::CreateRandomBot(WorldSession* session, uint8 cls
 {
     LOG_DEBUG("playerbots", "Creating a new random bot for class: {}", cls);
 
-    const bool alliance = static_cast<bool>(urand(0, 1));
+    // Try to get 50/50 faction distribution for random bot population balance.
+    // Without this, races from the faction with more class options would dominate.
+    bool alliance = static_cast<bool>(urand(0, 1));
 
-    std::vector<uint8> raceOptions;
-    for (uint8 race = RACE_HUMAN; race < sRaceMgr->GetMaxRaces(); ++race)
+    auto collectRaceOptions = [cls](bool forAlliance)
     {
-        // skip disabled with config races
-        if ((1 << (race - 1)) & sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK))
-            continue;
-
-        // Try to get 50/50 faction distribution for random bot population balance.
-        // Without this check, races from the faction with more class options would dominate.
-        if (alliance == IsAlliance(race))
+        std::vector<uint8> options;
+        for (uint8 race = RACE_HUMAN; race < sRaceMgr->GetMaxRaces(); ++race)
         {
-            if (IsValidRaceClassCombination(race, cls, sWorld->getIntConfig(CONFIG_EXPANSION)))
-                raceOptions.push_back(race);
+            // skip disabled with config races
+            if ((1 << (race - 1)) & sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK))
+                continue;
+
+            if (sPlayerbotAIConfig.GetRandomBotRaceWeight(race) == 0)
+                continue;
+
+            if (forAlliance == IsAlliance(race) &&
+                IsValidRaceClassCombination(race, cls, sWorld->getIntConfig(CONFIG_EXPANSION)))
+                options.push_back(race);
+        }
+        return options;
+    };
+
+    auto maxRaceWeight = [](std::vector<uint8> const& options)
+    {
+        uint32 maxWeight = 0;
+        for (uint8 race : options)
+            maxWeight = std::max(maxWeight, sPlayerbotAIConfig.GetRandomBotRaceWeight(race));
+        return maxWeight;
+    };
+
+    std::vector<uint8> raceOptions = collectRaceOptions(alliance);
+
+    // If every race this faction offers for the class is down-weighted (e.g. Blood Elf as the only
+    // Horde paladin), keep the faction only with the best race's weight as probability, so the
+    // weight also limits that race where it has no competitors.
+    uint32 const factionWeight = std::min(maxRaceWeight(raceOptions), DEFAULT_RANDOM_BOT_RACE_WEIGHT);
+    if (!raceOptions.empty() && urand(1, DEFAULT_RANDOM_BOT_RACE_WEIGHT) > factionWeight)
+    {
+        std::vector<uint8> otherOptions = collectRaceOptions(!alliance);
+        if (!otherOptions.empty())
+        {
+            alliance = !alliance;
+            raceOptions = std::move(otherOptions);
         }
     }
 
@@ -92,7 +121,23 @@ Player* RandomPlayerbotFactory::CreateRandomBot(WorldSession* session, uint8 cls
         return nullptr;
     }
 
-    const uint8 race = raceOptions[urand(0, raceOptions.size() - 1)];
+    uint32 totalWeight = 0;
+    for (uint8 option : raceOptions)
+        totalWeight += sPlayerbotAIConfig.GetRandomBotRaceWeight(option);
+
+    uint8 race = raceOptions.back();
+    uint32 roll = urand(1, totalWeight);
+    for (uint8 option : raceOptions)
+    {
+        uint32 const weight = sPlayerbotAIConfig.GetRandomBotRaceWeight(option);
+        if (roll <= weight)
+        {
+            race = option;
+            break;
+        }
+        roll -= weight;
+    }
+
     const uint8 gender = urand(0, 1) ? GENDER_MALE : GENDER_FEMALE;
     const auto raceAndGender = CombineRaceAndGender(race, gender);
 
