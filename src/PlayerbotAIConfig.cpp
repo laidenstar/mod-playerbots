@@ -579,6 +579,14 @@ bool PlayerbotAIConfig::Initialize()
 
     RandomBotAccountPrefix = sConfigMgr->GetOption<std::string>("Playerbots.RandomBotAccountPrefix", "rndbot");
     RandomBotAccountCount = sConfigMgr->GetOption<int32>("Playerbots.RandomBotAccountCount", 0);
+    RandomBotRaceWeights.clear();
+    for (uint8 race = 1; race <= MAX_RACE_MASK_BITS; ++race)
+    {
+        uint32 const weight = sConfigMgr->GetOption<uint32>(
+            "Playerbots.RandomBotRaceWeight." + std::to_string(race), DEFAULT_RANDOM_BOT_RACE_WEIGHT, false);
+        if (weight != DEFAULT_RANDOM_BOT_RACE_WEIGHT)
+            RandomBotRaceWeights[race] = weight;
+    }
     DeleteRandomBotAccounts = sConfigMgr->GetOption<bool>("Playerbots.DeleteRandomBotAccounts", false);
     RandomBotGuildCount = sConfigMgr->GetOption<int32>("Playerbots.RandomBotGuildCount", 20);
     RandomBotGuildSizeMax = sConfigMgr->GetOption<int32>("Playerbots.RandomBotGuildSizeMax", 15);
