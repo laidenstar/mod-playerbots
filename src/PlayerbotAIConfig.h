@@ -78,6 +78,11 @@ enum NewRpgStatus : int
 
 #define MAX_SPECNO 20
 
+// Race weight meaning "normal" chance for Playerbots.RandomBotRaceWeight.<race>.
+constexpr uint32 DEFAULT_RANDOM_BOT_RACE_WEIGHT = 100;
+// Race IDs index the 32-bit race mask, so no race ID can exceed this.
+constexpr uint8 MAX_RACE_MASK_BITS = 32;
+
 // One level range/bucket used by the random bot level brackets sub-feature (see RandomBotLevelMgr).
 struct LevelBracketConfig
 {
@@ -99,6 +104,11 @@ public:
     bool Initialize();
     void LoadRandomBotLevelConfig();
     bool IsInRandomAccountList(uint32 id);
+    uint32 GetRandomBotRaceWeight(uint8 race) const
+    {
+        auto const itr = RandomBotRaceWeights.find(race);
+        return itr != RandomBotRaceWeights.end() ? itr->second : DEFAULT_RANDOM_BOT_RACE_WEIGHT;
+    }
     bool IsInRandomQuestItemList(uint32 id);
     bool IsPvpProhibited(uint32 zoneId, uint32 areaId);
     bool IsInPvpProhibitedZone(uint32 id);
@@ -299,6 +309,7 @@ public:
     std::string CommandPrefix, CommandSeparator;
     std::string RandomBotAccountPrefix;
     uint32 RandomBotAccountCount;
+    std::unordered_map<uint8, uint32> RandomBotRaceWeights;
     bool RandomBotRandomPassword;
     bool DeleteRandomBotAccounts;
     uint32 RandomBotGuildCount, RandomBotGuildSizeMax;
