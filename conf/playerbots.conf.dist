@@ -96,6 +96,16 @@ Playerbots.MaxRandomBots = 500
 # Default: 0 (automatic)
 Playerbots.RandomBotAccountCount = 0
 
+# Randombot race weights
+# Relative chance of each race when a new random bot is created, per race ID:
+# 1 Human, 2 Orc, 3 Dwarf, 4 Night Elf, 5 Undead, 6 Tauren, 7 Gnome, 8 Troll, 10 Blood Elf, 11 Draenei.
+# The race is drawn among the races of the bot's faction that can play its class, in proportion to these
+# weights. If every such race has a weight below 100 (e.g. Blood Elf for a Horde paladin), the bot switches
+# to the other faction with probability (100 - highest weight) / 100. 0 never creates that race.
+# Only affects newly created bots; existing bots keep their race.
+# Default: 100 for every race (uniform)
+# Playerbots.RandomBotRaceWeight.10 = 100
+
 # Addclass accounts
 # Number of accounts created for bots reserved for the addclass command. As with randombots, each account has
 # 10 bots (or 9 if WotLK is disabled), one bot for each class.
