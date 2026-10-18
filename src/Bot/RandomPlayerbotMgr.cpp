@@ -780,7 +780,8 @@ uint32 RandomPlayerbotMgr::AddRandomBots()
             if (GetEventValue(charInfo.guid, "add") ||
                 GetPlayerBot(charInfo.guid) ||
                 currentBots.contains(charInfo.guid) ||
-                (sPlayerbotAIConfig.DisableDeathKnightLogin && charInfo.rClass == CLASS_DEATH_KNIGHT))
+                (sPlayerbotAIConfig.DisableDeathKnightLogin && charInfo.rClass == CLASS_DEATH_KNIGHT) ||
+                (sPlayerbotAIConfig.DisabledLoginRaceMask & (1 << (charInfo.rRace - 1))))
                 return false;
 
             SetEventValue(charInfo.guid, "add", 1, YEAR);
