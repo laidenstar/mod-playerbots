@@ -371,6 +371,7 @@ public:
     uint32 RandomBotAllianceRatio;
     uint32 RandomBotHordeRatio;
     bool DisableDeathKnightLogin;
+    uint32 DisabledLoginRaceMask;
     bool LimitTalentsExpansion;
     uint32 BotActiveAlone;
     uint32 BotActiveAloneDurationSeconds;

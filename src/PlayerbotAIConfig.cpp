@@ -690,6 +690,7 @@ bool PlayerbotAIConfig::Initialize()
     RandomBotAllianceRatio = sConfigMgr->GetOption<int32>("Playerbots.RandomBotAllianceRatio", 50);
     RandomBotHordeRatio = sConfigMgr->GetOption<int32>("Playerbots.RandomBotHordeRatio", 50);
     DisableDeathKnightLogin = sConfigMgr->GetOption<bool>("Playerbots.DisableDeathKnightLogin", 0);
+    DisabledLoginRaceMask = sConfigMgr->GetOption<uint32>("Playerbots.DisabledLoginRaceMask", 0);
     LimitTalentsExpansion = sConfigMgr->GetOption<bool>("Playerbots.LimitTalentsExpansion", 0);
     BotActiveAlone = sConfigMgr->GetOption<int32>("Playerbots.BotActiveAlone", 10);
     BotActiveAloneDurationSeconds = sConfigMgr->GetOption<int32>("Playerbots.BotActiveAloneDurationSeconds", 30);
