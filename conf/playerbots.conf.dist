@@ -1483,6 +1483,42 @@ Playerbots.RpgStatusProbWeight.Rest = 5
 Playerbots.RpgStatusProbWeight.OutdoorPvp = 10
 Playerbots.RpgStatusProbWeight.DoGather = 15
 
+# RPG status weights used instead of the ones above while a bot is inside a capital city
+# (the eight faction capitals, Shattrath and Dalaran). Raise WanderNpc/WanderRandom/Rest and
+# lower DoQuest/TravelFlight to make visiting bots linger in cities. -1 uses the normal weight.
+# Default: -1 for every status (capitals behave like everywhere else)
+Playerbots.RpgStatusProbWeightInCapital.WanderRandom = -1
+Playerbots.RpgStatusProbWeightInCapital.WanderNpc = -1
+Playerbots.RpgStatusProbWeightInCapital.GoGrind = -1
+Playerbots.RpgStatusProbWeightInCapital.GoCamp = -1
+Playerbots.RpgStatusProbWeightInCapital.DoQuest = -1
+Playerbots.RpgStatusProbWeightInCapital.TravelFlight = -1
+Playerbots.RpgStatusProbWeightInCapital.Rest = -1
+Playerbots.RpgStatusProbWeightInCapital.OutdoorPvp = -1
+Playerbots.RpgStatusProbWeightInCapital.DoGather = -1
+
+# Keep a minimum number of random bots in a capital city while a real player is in it. When a real
+# player is in a capital with fewer bots than CapitalFill.TargetBots, idle bots of the capital's
+# faction are teleported in from elsewhere, a few per check, to spots in front of the city's service
+# NPCs (preferring spots out of the player's sight), and then go about their normal RPG behaviour.
+# Bots are only taken from places with no real player nearby, and never from groups, combat,
+# instances, battlegrounds or flights. Bots are not held: they leave on their own as usual.
+#
+# Enable                 (Default: 0)
+# TargetBots             (Default: 25  Minimum random bots in an occupied capital)
+# MaxBotsPerCheck        (Default: 6   Bots teleported in per check, per capital)
+# CheckIntervalSeconds   (Default: 5)
+# MinBotLevel            (Default: 10)
+# SpotMinPlayerDistance  (Default: 40  Prefer arrival spots at least this many yards from real players)
+# ReuseCooldownSeconds   (Default: 1800  A bot that was brought in is not brought in again for this long)
+Playerbots.CapitalFill.Enable = 0
+Playerbots.CapitalFill.TargetBots = 25
+Playerbots.CapitalFill.MaxBotsPerCheck = 6
+Playerbots.CapitalFill.CheckIntervalSeconds = 5
+Playerbots.CapitalFill.MinBotLevel = 10
+Playerbots.CapitalFill.SpotMinPlayerDistance = 40
+Playerbots.CapitalFill.ReuseCooldownSeconds = 1800
+
 # Bots' minimum and maximum level when teleporting in and out of a zone, according to the new RPG strategy
 # Format: Playerbots.ZoneBracket.zoneID = minLevel,maxLevel
 #

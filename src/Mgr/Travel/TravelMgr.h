@@ -880,6 +880,10 @@ public:
     const std::vector<WorldLocation> GetTeleportLocations(Player* bot, uint32 level);
     const std::vector<WorldLocation> GetTravelHubs(Player* bot);
     std::vector<WorldLocation> GetCityLocations(Player* bot);
+    static bool IsCapitalZone(uint32 zoneId);
+    static TeamId GetCapitalTeam(uint32 zoneId);
+    // Standing spots just in front of service NPCs (banker, vendor, trainer, ...) in a capital zone.
+    std::vector<WorldLocation> const& GetCapitalSpots(uint32 zoneId);
     // Returns the world locations of quest givers the bot can accept a quest from right now
     // (level/faction valid, no unmet prereq, not in progress, quest-log + item room).
     // Backed by a startup-built per-(level, team) index; empty when there is no valid giver.
@@ -1015,6 +1019,7 @@ private:
     std::map<uint8, std::vector<WorldLocation>> allianceHubsPerLevelCache;
     std::map<uint8, std::vector<WorldLocation>> hordeHubsPerLevelCache;
     std::map<uint8, std::vector<BankerLocation>> bankerLocsPerLevelCache;
+    std::unordered_map<uint32, std::vector<WorldLocation>> capitalSpotCache;
     std::unordered_map<uint32, WorldLocation> bankerEntryToLocation;
     std::map<uint8, std::vector<WorldLocation>> locsPerLevelCache;
     std::unordered_map<uint32, std::vector<WorldLocation>> creatureSpawnsByTemplate;

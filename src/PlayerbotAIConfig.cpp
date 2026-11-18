@@ -781,6 +781,29 @@ bool PlayerbotAIConfig::Initialize()
     RpgStatusProbWeight[RPG_OUTDOOR_PVP] = sConfigMgr->GetOption<int32>("Playerbots.RpgStatusProbWeight.OutdoorPvp", 10);
     RpgStatusProbWeight[RPG_DO_GATHER] = sConfigMgr->GetOption<int32>("Playerbots.RpgStatusProbWeight.DoGather", 15);
 
+    // A negative capital weight inherits the normal weight for that status.
+    static std::vector<std::pair<NewRpgStatus, char const*>> const capitalWeightKeys = {
+        {RPG_WANDER_RANDOM, "WanderRandom"}, {RPG_WANDER_NPC, "WanderNpc"},     {RPG_GO_GRIND, "GoGrind"},
+        {RPG_GO_CAMP, "GoCamp"},             {RPG_DO_QUEST, "DoQuest"},         {RPG_TRAVEL_FLIGHT, "TravelFlight"},
+        {RPG_REST, "Rest"},                  {RPG_OUTDOOR_PVP, "OutdoorPvp"},   {RPG_DO_GATHER, "DoGather"}};
+    for (auto const& [status, key] : capitalWeightKeys)
+    {
+        int32 weight =
+            sConfigMgr->GetOption<int32>(std::string("Playerbots.RpgStatusProbWeightInCapital.") + key, -1);
+        RpgStatusProbWeightInCapital[status] = weight < 0 ? RpgStatusProbWeight[status] : weight;
+    }
+
+    CapitalFillEnabled = sConfigMgr->GetOption<bool>("Playerbots.CapitalFill.Enable", false);
+    CapitalFillTargetBots = sConfigMgr->GetOption<uint32>("Playerbots.CapitalFill.TargetBots", 25);
+    CapitalFillMaxBotsPerCheck = sConfigMgr->GetOption<uint32>("Playerbots.CapitalFill.MaxBotsPerCheck", 6);
+    CapitalFillCheckIntervalSeconds =
+        std::max<uint32>(1, sConfigMgr->GetOption<uint32>("Playerbots.CapitalFill.CheckIntervalSeconds", 5));
+    CapitalFillMinBotLevel = sConfigMgr->GetOption<uint32>("Playerbots.CapitalFill.MinBotLevel", 10);
+    CapitalFillSpotMinPlayerDistance =
+        sConfigMgr->GetOption<float>("Playerbots.CapitalFill.SpotMinPlayerDistance", 40.0f);
+    CapitalFillReuseCooldownSeconds =
+        sConfigMgr->GetOption<uint32>("Playerbots.CapitalFill.ReuseCooldownSeconds", 1800);
+
     SyncLevelWithPlayers = sConfigMgr->GetOption<bool>("Playerbots.SyncLevelWithPlayers", false);
     RandomBotConcentrateInPlayerZone =
         sConfigMgr->GetOption<bool>("Playerbots.RandomBotConcentrateInPlayerZone", false);

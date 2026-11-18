@@ -11,6 +11,7 @@
 #include "CheckMountStateAction.h"
 #include "Config.h"
 #include "BuiltInConfig.h"
+#include "CapitalFillMgr.h"
 #include "DBUpdater.h"
 #include "DatabaseEnv.h"
 #include "PlayerbotsDatabase.h"
@@ -550,6 +551,7 @@ public:
         sRandomPlayerbotMgr.UpdateSessions();  // Per-bot packet queues, world thread only
         PlayerbotWorldThreadProcessor::instance().Update(diff);
         sRandomPlayerbotMgr.UpdateAI(diff);  // World thread only
+        sCapitalFillMgr.Update(diff);        // World thread only
     }
 
     // Runs before the sessions are kicked on server shutdown

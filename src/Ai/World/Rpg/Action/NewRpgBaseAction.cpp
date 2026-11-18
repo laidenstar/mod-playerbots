@@ -908,17 +908,20 @@ bool NewRpgBaseAction::SelectRandomFlightTaxiNode(uint32& flightMasterEntry, Wor
 
 bool NewRpgBaseAction::RandomChangeStatus(std::vector<NewRpgStatus> candidateStatus)
 {
+    std::unordered_map<NewRpgStatus, uint32>& weights = TravelMgr::IsCapitalZone(bot->GetZoneId())
+                                                            ? sPlayerbotAIConfig.RpgStatusProbWeightInCapital
+                                                            : sPlayerbotAIConfig.RpgStatusProbWeight;
     std::vector<NewRpgStatus> availableStatus;
     uint32 probSum = 0;
     for (NewRpgStatus status : candidateStatus)
     {
-        if (sPlayerbotAIConfig.RpgStatusProbWeight[status] == 0)
+        if (weights[status] == 0)
             continue;
 
         if (CheckRpgStatusAvailable(status))
         {
             availableStatus.push_back(status);
-            probSum += sPlayerbotAIConfig.RpgStatusProbWeight[status];
+            probSum += weights[status];
         }
     }
     // Safety check. Default to "rest" if all RPG weights = 0
@@ -933,7 +936,7 @@ bool NewRpgBaseAction::RandomChangeStatus(std::vector<NewRpgStatus> candidateSta
     NewRpgStatus chosenStatus = RPG_STATUS_END;
     for (NewRpgStatus status : availableStatus)
     {
-        accumulate += sPlayerbotAIConfig.RpgStatusProbWeight[status];
+        accumulate += weights[status];
         if (accumulate >= rand)
         {
             chosenStatus = status;

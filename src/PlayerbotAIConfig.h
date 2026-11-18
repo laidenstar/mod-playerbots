@@ -411,6 +411,14 @@ public:
     float RpgTargetSearchDistance;
     bool CollectDetailedQuestStats;
     std::unordered_map<NewRpgStatus, uint32> RpgStatusProbWeight;
+    std::unordered_map<NewRpgStatus, uint32> RpgStatusProbWeightInCapital;
+    bool CapitalFillEnabled;
+    uint32 CapitalFillTargetBots;
+    uint32 CapitalFillMaxBotsPerCheck;
+    uint32 CapitalFillCheckIntervalSeconds;
+    uint32 CapitalFillMinBotLevel;
+    float CapitalFillSpotMinPlayerDistance;
+    uint32 CapitalFillReuseCooldownSeconds;
     bool SyncLevelWithPlayers;
     bool RandomBotConcentrateInPlayerZone;
     bool AutoLearnQuestSpells;

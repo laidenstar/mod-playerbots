@@ -4518,6 +4518,16 @@ const std::vector<WorldLocation> TravelMgr::GetTravelHubs(Player* bot)
     return locs;
 }
 
+bool TravelMgr::IsCapitalZone(uint32 zoneId) { return FindCapitalByZone(zoneId) != nullptr; }
+
+TeamId TravelMgr::GetCapitalTeam(uint32 zoneId)
+{
+    Capital const* capital = FindCapitalByZone(zoneId);
+    return capital ? capital->team : TEAM_NEUTRAL;
+}
+
+std::vector<WorldLocation> const& TravelMgr::GetCapitalSpots(uint32 zoneId) { return capitalSpotCache[zoneId]; }
+
 std::vector<WorldLocation> TravelMgr::GetCityLocations(Player* bot)
 {
     uint32 level = bot->GetLevel();
@@ -4722,6 +4732,7 @@ void TravelMgr::PrepareDestinationCache()
     uint32 bankerCount = 0;
 
     LOG_INFO("playerbots", "Preparing destination caches for {} levels...", maxLevel);
+    capitalSpotCache.clear();
     // Temporary map to group creatures by entry and area
     std::map<std::tuple<uint16, int32, int32, int32>, std::vector<CreatureData>> tempLocsCache;
     std::map<uint32, std::map<uint32, std::vector<WorldLocation>>> tempCreatureCache;
@@ -4751,6 +4762,15 @@ void TravelMgr::PrepareDestinationCache()
             continue;
 
         uint32 areaId = area->zone ? area->zone : area->ID;
+
+        constexpr uint32 CAPITAL_SPOT_NPC_FLAGS = UNIT_NPC_FLAG_BANKER | UNIT_NPC_FLAG_AUCTIONEER |
+                                                  UNIT_NPC_FLAG_INNKEEPER | UNIT_NPC_FLAG_VENDOR |
+                                                  UNIT_NPC_FLAG_TRAINER | UNIT_NPC_FLAG_FLIGHTMASTER;
+        constexpr float CAPITAL_SPOT_OFFSET = 2.5f;
+        if ((creatureTemplate->npcflag & CAPITAL_SPOT_NPC_FLAGS) && FindCapitalByZone(areaId))
+            capitalSpotCache[areaId].push_back(WorldLocation(mapId, x + cos(orient) * CAPITAL_SPOT_OFFSET,
+                                                             y + sin(orient) * CAPITAL_SPOT_OFFSET, z,
+                                                             orient + M_PI));
 
         // CREATURES
         if (creatureTemplate->npcflag == 0 &&
