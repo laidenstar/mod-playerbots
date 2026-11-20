@@ -882,8 +882,16 @@ public:
     std::vector<WorldLocation> GetCityLocations(Player* bot);
     static bool IsCapitalZone(uint32 zoneId);
     static TeamId GetCapitalTeam(uint32 zoneId);
+    // Home region of a race: its capital zone and starting zones. 0 / false for unknown races.
+    static uint32 GetHomeCapital(uint8 race);
+    static bool IsHomeZone(uint8 race, uint32 zoneId);
+    // Whether Playerbots.HomeRegionRaceMask covers the bot's race.
+    static bool HasHomeRegion(Player* bot);
+    // Whether a random bot may be teleported to this spot: its map is in Playerbots.RandomBotMaps, or
+    // Playerbots.RandomBotStartingRegionsAnyMap is on and it lies in a race capital or starting zone.
+    static bool IsRandomBotLocation(uint32 mapId, float x, float y, float z);
     // Standing spots just in front of service NPCs (banker, vendor, trainer, ...) in a capital zone.
-    std::vector<WorldLocation> const& GetCapitalSpots(uint32 zoneId);
+    std::vector<WorldLocation> const& GetCapitalSpots(uint32 zoneId) const;
     // Returns the world locations of quest givers the bot can accept a quest from right now
     // (level/faction valid, no unmet prereq, not in progress, quest-log + item room).
     // Backed by a startup-built per-(level, team) index; empty when there is no valid giver.

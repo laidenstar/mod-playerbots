@@ -132,21 +132,28 @@ void CapitalFillMgr::FillCapital(uint32 zoneId, OccupiedCapital const& capital, 
     uint32 const minLevel = CapitalMinLevel(zoneId);
 
     uint32 brought = 0;
-    for (Player*& bot : candidates)
+    // First pass: bots whose race calls this capital home (Playerbots.HomeRegionRaceMask); second: everyone.
+    for (bool const homeOnly : {true, false})
     {
-        if (brought >= wanted)
-            break;
+        for (Player*& bot : candidates)
+        {
+            if (brought >= wanted)
+                break;
 
-        if (!bot || (team != TEAM_NEUTRAL && bot->GetTeamId() != team) || bot->GetLevel() < minLevel)
-            continue;
+            if (!bot || (team != TEAM_NEUTRAL && bot->GetTeamId() != team) || bot->GetLevel() < minLevel)
+                continue;
 
-        PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
-        if (!botAI || botAI->HasPlayerNearby(BOT_SOURCE_PLAYER_DISTANCE))
-            continue;
+            if (homeOnly && !(TravelMgr::HasHomeRegion(bot) && TravelMgr::GetHomeCapital(bot->getRace()) == zoneId))
+                continue;
 
-        if (TeleportIn(bot, zoneId, capital))
-            ++brought;
-        bot = nullptr;  // used or unsuitable for this capital; either way not offered again this check
+            PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
+            if (!botAI || botAI->HasPlayerNearby(BOT_SOURCE_PLAYER_DISTANCE))
+                continue;
+
+            if (TeleportIn(bot, zoneId, capital))
+                ++brought;
+            bot = nullptr;  // used or unsuitable for this capital; either way not offered again this check
+        }
     }
 
     if (brought)

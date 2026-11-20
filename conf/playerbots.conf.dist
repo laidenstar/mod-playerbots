@@ -802,6 +802,19 @@ Playerbots.DisableDeathKnightLogin = 0
 # Default: 0 (all races can log in)
 Playerbots.DisabledLoginRaceMask = 0
 
+# Keep random bots of the given races near their home region (race mask, same format as above)
+# On a random teleport, such a bot prefers level-appropriate destinations in its race's starting
+# zones and capital (e.g. Blood Elf: Eversong Woods, Ghostlands, Silvermoon City), falling back to
+# the normal destinations when none fit its level. Its city/banker trips go to its race's capital,
+# and Playerbots.CapitalFill picks bots of that race first when filling their capital.
+# Example: 512 keeps Blood Elf bots mostly in Quel'Thalas.
+# Default: 0 (disabled)
+Playerbots.HomeRegionRaceMask = 0
+
+# Chance (percent) that a home-region bot's teleport applies the preference above
+# Default: 100
+Playerbots.HomeRegionChance = 100
+
 # Enable simulated expansion limitation for talents and glyphs
 # If enabled, limits talent trees to 6 rows plus the middle talent of the 7th row for bots until level 61
 # and 8 rows plus the middle talent of the 9th row for bots from level 61 until level 71
@@ -1665,6 +1678,12 @@ Playerbots.ZoneBracket.4197 = 79,80
 # Map IDs where bots can be teleported to
 # Defaults: 0 = Eastern Kingdoms, 1 = Kalimdor, 530 = Outland, 571 = Northrend
 Playerbots.RandomBotMaps = 0,1,530,571
+
+# Also allow race capitals and starting zones on maps missing from RandomBotMaps as random bot
+# destinations, e.g. with RandomBotMaps = 0,1: Eversong Woods, Ghostlands, Silvermoon City,
+# Azuremyst Isle, Bloodmyst Isle and the Exodar stay reachable while the rest of Outland does not.
+# Default: 0 (disabled)
+Playerbots.RandomBotStartingRegionsAnyMap = 0
 
 # When an idle bot picks a random destination it makes ONE weighted roll across three classes,
 # so each value is an exact share of the roll (peers, not nested gates):

@@ -719,6 +719,9 @@ bool PlayerbotAIConfig::Initialize()
     }
     DisableDeathKnightLogin = sConfigMgr->GetOption<bool>("Playerbots.DisableDeathKnightLogin", 0);
     DisabledLoginRaceMask = sConfigMgr->GetOption<uint32>("Playerbots.DisabledLoginRaceMask", 0);
+    HomeRegionRaceMask = sConfigMgr->GetOption<uint32>("Playerbots.HomeRegionRaceMask", 0);
+    HomeRegionChance = std::min<uint32>(100, sConfigMgr->GetOption<uint32>("Playerbots.HomeRegionChance", 100));
+    RandomBotStartingRegionsAnyMap = sConfigMgr->GetOption<bool>("Playerbots.RandomBotStartingRegionsAnyMap", false);
     LimitTalentsExpansion = sConfigMgr->GetOption<bool>("Playerbots.LimitTalentsExpansion", 0);
     BotActiveAlone = sConfigMgr->GetOption<int32>("Playerbots.BotActiveAlone", 10);
     BotActiveAloneDurationSeconds = sConfigMgr->GetOption<int32>("Playerbots.BotActiveAloneDurationSeconds", 30);

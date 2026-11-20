@@ -372,6 +372,9 @@ public:
     uint32 RandomBotHordeRatio;
     bool DisableDeathKnightLogin;
     uint32 DisabledLoginRaceMask;
+    uint32 HomeRegionRaceMask;
+    uint32 HomeRegionChance;
+    bool RandomBotStartingRegionsAnyMap;
     bool LimitTalentsExpansion;
     uint32 BotActiveAlone;
     uint32 BotActiveAloneDurationSeconds;

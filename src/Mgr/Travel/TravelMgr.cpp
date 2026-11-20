@@ -25,6 +25,7 @@
 #include "TravelNode.h"
 #include "VMapFactory.h"
 #include "VMapMgr2.h"
+#include <array>
 #include <iomanip>
 #include <numeric>
 
@@ -4526,7 +4527,80 @@ TeamId TravelMgr::GetCapitalTeam(uint32 zoneId)
     return capital ? capital->team : TEAM_NEUTRAL;
 }
 
-std::vector<WorldLocation> const& TravelMgr::GetCapitalSpots(uint32 zoneId) { return capitalSpotCache[zoneId]; }
+namespace
+{
+    struct HomeRegion
+    {
+        uint32 capital;
+        std::array<uint32, 2> zones;
+    };
+
+    HomeRegion const* FindHomeRegion(uint8 race)
+    {
+        static const std::unordered_map<uint8, HomeRegion> homeRegions = {
+            { RACE_HUMAN,         { AREA_STORMWIND_CITY,  { AREA_ELWYNN_FOREST, AREA_WESTFALL } } },
+            { RACE_DWARF,         { AREA_IRONFORGE,       { AREA_DUN_MOROGH, AREA_LOCH_MODAN } } },
+            { RACE_GNOME,         { AREA_IRONFORGE,       { AREA_DUN_MOROGH, AREA_LOCH_MODAN } } },
+            { RACE_NIGHTELF,      { AREA_DARNASSUS,       { AREA_TELDRASSIL, AREA_DARKSHORE } } },
+            { RACE_DRAENEI,       { AREA_THE_EXODAR,      { AREA_AZUREMYST_ISLE, AREA_BLOODMYST_ISLE } } },
+            { RACE_ORC,           { AREA_ORGRIMMAR,       { AREA_DUROTAR, AREA_THE_BARRENS } } },
+            { RACE_TROLL,         { AREA_ORGRIMMAR,       { AREA_DUROTAR, AREA_THE_BARRENS } } },
+            { RACE_TAUREN,        { AREA_THUNDER_BLUFF,   { AREA_MULGORE, AREA_THE_BARRENS } } },
+            { RACE_UNDEAD_PLAYER, { AREA_UNDERCITY,       { AREA_TIRISFAL_GLADES, AREA_SILVERPINE_FOREST } } },
+            { RACE_BLOODELF,      { AREA_SILVERMOON_CITY, { AREA_EVERSONG_WOODS, AREA_GHOSTLANDS } } },
+        };
+
+        auto it = homeRegions.find(race);
+        return it != homeRegions.end() ? &it->second : nullptr;
+    }
+}
+
+uint32 TravelMgr::GetHomeCapital(uint8 race)
+{
+    HomeRegion const* region = FindHomeRegion(race);
+    return region ? region->capital : 0;
+}
+
+bool TravelMgr::IsHomeZone(uint8 race, uint32 zoneId)
+{
+    HomeRegion const* region = FindHomeRegion(race);
+    if (!region || !zoneId)
+        return false;
+    return zoneId == region->capital || std::find(region->zones.begin(), region->zones.end(), zoneId) != region->zones.end();
+}
+
+bool TravelMgr::HasHomeRegion(Player* bot)
+{
+    return bot && (sPlayerbotAIConfig.HomeRegionRaceMask & bot->getRaceMask()) && FindHomeRegion(bot->getRace());
+}
+
+bool TravelMgr::IsRandomBotLocation(uint32 mapId, float x, float y, float z)
+{
+    auto const& maps = sPlayerbotAIConfig.RandomBotMaps;
+    if (std::find(maps.begin(), maps.end(), mapId) != maps.end())
+        return true;
+
+    if (!sPlayerbotAIConfig.RandomBotStartingRegionsAnyMap)
+        return false;
+
+    Map* map = sMapMgr->FindMap(mapId, 0);
+    if (!map || map->Instanceable())
+        return false;
+
+    uint32 const zoneId = map->GetZoneId(PHASEMASK_NORMAL, x, y, z);
+    for (uint8 race = RACE_HUMAN; race <= RACE_DRAENEI; ++race)
+        if (IsHomeZone(race, zoneId))
+            return true;
+    return false;
+}
+
+std::vector<WorldLocation> const& TravelMgr::GetCapitalSpots(uint32 zoneId) const
+{
+    // Called from map threads: find() must not insert.
+    static std::vector<WorldLocation> const none;
+    auto it = capitalSpotCache.find(zoneId);
+    return it != capitalSpotCache.end() ? it->second : none;
+}
 
 std::vector<WorldLocation> TravelMgr::GetCityLocations(Player* bot)
 {
@@ -4743,13 +4817,12 @@ void TravelMgr::PrepareDestinationCache()
             continue;
 
         uint16 mapId = creatureData.mapid;
-        if (std::find(sPlayerbotAIConfig.RandomBotMaps.begin(), sPlayerbotAIConfig.RandomBotMaps.end(), mapId)
-                      == sPlayerbotAIConfig.RandomBotMaps.end())
-            continue;
-
         float x = creatureData.posX;
         float y = creatureData.posY;
         float z = creatureData.posZ;
+        if (!IsRandomBotLocation(mapId, x, y, z))
+            continue;
+
         float orient = creatureData.orientation;
         uint32 templateEntry = creatureData.id;
 
@@ -5008,8 +5081,7 @@ void TravelMgr::PrepareQuestGiverTeleportIndex()
         if (eventSpawns.count(guid))
             continue;
 
-        if (std::find(sPlayerbotAIConfig.RandomBotMaps.begin(), sPlayerbotAIConfig.RandomBotMaps.end(),
-                      creData.mapid) == sPlayerbotAIConfig.RandomBotMaps.end())
+        if (!IsRandomBotLocation(creData.mapid, creData.posX, creData.posY, creData.posZ))
             continue;
 
         CreatureTemplate const* creatureTemplate = sObjectMgr->GetCreatureTemplate(creData.id);

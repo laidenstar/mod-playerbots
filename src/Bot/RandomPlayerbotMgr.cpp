@@ -1830,12 +1830,10 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>&
         tlocs.push_back(WorldPosition(loc));
     // Do not teleport to maps disabled in config
     tlocs.erase(std::remove_if(tlocs.begin(), tlocs.end(),
-                               [](WorldPosition l)
+                               [](WorldPosition const& l)
                                {
-                                   std::vector<uint32>::iterator i =
-                                       find(sPlayerbotAIConfig.RandomBotMaps.begin(),
-                                            sPlayerbotAIConfig.RandomBotMaps.end(), l.GetMapId());
-                                   return i == sPlayerbotAIConfig.RandomBotMaps.end();
+                                   return !TravelMgr::IsRandomBotLocation(l.GetMapId(), l.GetPositionX(),
+                                                                          l.GetPositionY(), l.GetPositionZ());
                                }),
                 tlocs.end());
     if (tlocs.empty())
@@ -1847,6 +1845,16 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>&
     PerfMonitorOperation* pmo = sPerfMonitor.start(PERF_MON_RNDBOT, "RandomTeleportByLocations");
 
     std::shuffle(std::begin(tlocs), std::end(tlocs), RandomEngine::Instance());
+
+    // Home-region races try destinations in their home zones first; the rest stay as a fallback.
+    if (TravelMgr::HasHomeRegion(bot) && urand(1, 100) <= sPlayerbotAIConfig.HomeRegionChance)
+    {
+        uint8 const race = bot->getRace();
+        std::stable_partition(tlocs.begin(), tlocs.end(),
+                              [race](WorldPosition const& l)
+                              { return TravelMgr::IsHomeZone(race, sMapMgr->GetZoneId(PHASEMASK_NORMAL, l)); });
+    }
+
     for (uint32 i = 0; i < tlocs.size(); i++)
     {
         WorldLocation loc = tlocs[i];
@@ -2029,7 +2037,11 @@ void RandomPlayerbotMgr::RandomTeleportForLevel(Player* bot)
     else if (bot->GetLevel() >= 10
              && roll < (sPlayerbotAIConfig.ProbTeleToQuestGivers + sPlayerbotAIConfig.ProbTeleToBankers) * 100)
     {
-        std::vector<WorldLocation> locs = sTravelMgr.GetCityLocations(bot);
+        std::vector<WorldLocation> locs;
+        if (TravelMgr::HasHomeRegion(bot) && urand(1, 100) <= sPlayerbotAIConfig.HomeRegionChance)
+            locs = sTravelMgr.GetCapitalSpots(TravelMgr::GetHomeCapital(bot->getRace()));
+        if (locs.empty())
+            locs = sTravelMgr.GetCityLocations(bot);
         if (!locs.empty())
         {
             RandomTeleport(bot, locs, /*hearth=*/true);
@@ -2135,8 +2147,8 @@ std::vector<WorldLocation> RandomPlayerbotMgr::FilterPlayerZoneTeleportLocations
                 continue;
         }
 
-        if (std::find(sPlayerbotAIConfig.RandomBotMaps.begin(), sPlayerbotAIConfig.RandomBotMaps.end(),
-                      loc.GetMapId()) == sPlayerbotAIConfig.RandomBotMaps.end())
+        if (!TravelMgr::IsRandomBotLocation(loc.GetMapId(), loc.GetPositionX(), loc.GetPositionY(),
+                                            loc.GetPositionZ()))
             continue;
 
         if (botAI && !botAI->StarterLevelDistanceCheck(bot, loc, true))
